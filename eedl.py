@@ -1,5 +1,6 @@
 """
-earthenginedl.py
+eedl.py
+Earth Engine Downloader
 A script to download satellite images from the Google Earth Engine API. 
 The script can download images from the Landsat 8, Landsat 9, and Sentinel 2 sensors.
 The script can download images from a specified geographical region, date range, and cloud cover percentage range.
@@ -154,7 +155,7 @@ def make_rectangle(ee_point, h_pt_buffer, v_pt_buffer = None):
     pt_tl_y = transformed_pt[1] + v_pt_buffer
     pt_br_x = transformed_pt[0] + h_pt_buffer
     pt_br_y = transformed_pt[1] - v_pt_buffer
-    pt_rect = ee.Geometry.Rectangle([pt_tl_x, pt_br_y, pt_br_x, pt_tl_y], proj, True, False).bounds()
+    pt_rect = ee.Geometry.Rectangle([pt_tl_x, pt_br_y, pt_br_x, pt_tl_y], proj, True, False).bounds("EPSG:4326")
     return pt_rect
 
 def get_url(index):
