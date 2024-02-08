@@ -1,33 +1,45 @@
-import numpy as np
+"""
+getMGRS.py
+Generates a grid that transforms MGRS (Military Grid Reference System) coordinates to corresponding longitude and latitude ranges.
+May return specific longitude and latitude ranges for a given MGRS coordinate if a key is provided.
+Author: Kyle McCleary
+"""
 import argparse
+import numpy as np
 
+LONSTEP = 6
+LATSTEP = 8
 
 def getMGRS():
-    LON_STEP = 6
-    LAT_STEP = 8   
-    lons = np.arange(-180,180,LON_STEP)
-    lats = np.arange(-80,80,LAT_STEP)
+    """
+    Generate a grid of MGRS (Military Grid Reference System) coordinates.
+    Returns:
+        dict: A dictionary mapping MGRS coordinates to corresponding longitude and latitude ranges.
+    """
+    lons = np.arange(-180,180,LONSTEP)
+    lats = np.arange(-80,80,LATSTEP)
     lon_labels = np.arange(1,61)
     lat_labels = ['C','D','E','F','G','H','J','K','L','M',
                   'N','P','Q','R','S','T','U','V','W','X']        
-    grid = {}
-    for i in range(len(lats)):
-        for j in range(len(lons)):
-            grid[str(lon_labels[j]).zfill(2)+lat_labels[i]] = (lons[j],lats[i],lons[j]+LON_STEP,lats[i]+LAT_STEP)
-    
+    mgrs_grid = {}
+    for i, lat_label in enumerate(lat_labels):
+        for j, lon_label in enumerate(lon_labels):
+            mgrs_grid[str(lon_label).zfill(2) + lat_label] = (lons[j], lats[i],
+                                                               lons[j] + LONSTEP, lats[i] + LATSTEP)
+
     for i in lon_labels:
         idx = str(i).zfill(2)+'X'
-        grid[idx] = (lons[i-1],72,lons[i-1]+LON_STEP,84) 
-    grid['31V'] = (0,56,3,64)
-    grid['32V'] = (3,56,12,64)
-    grid['31X'] = (0,72,9,84)
-    grid['33X'] = (9,72,21,84)
-    grid['35X'] = (21,72,33,84)
-    grid['37X'] = (33,72,42,84)   
-    del grid['32X']
-    del grid['34X']
-    del grid['36X']
-    return grid
+        mgrs_grid[idx] = (lons[i-1],72,lons[i-1]+LONSTEP,84)
+    mgrs_grid['31V'] = (0,56,3,64)
+    mgrs_grid['32V'] = (3,56,12,64)
+    mgrs_grid['31X'] = (0,72,9,84)
+    mgrs_grid['33X'] = (9,72,21,84)
+    mgrs_grid['35X'] = (21,72,33,84)
+    mgrs_grid['37X'] = (33,72,42,84)
+    del mgrs_grid['32X']
+    del mgrs_grid['34X']
+    del mgrs_grid['36X']
+    return mgrs_grid
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
