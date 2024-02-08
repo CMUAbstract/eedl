@@ -99,7 +99,7 @@ def get_collection(sensor, ee_region_filter, ee_date_filter, ee_bands = None, cl
 
     ee_collection = ee.ImageCollection(collection_string)
     ee_collection = ee_collection.filter(ee_date_filter)
-    #ee_collection = ee_collection.filter(ee_region_filter).filter(ee_date_filter)
+    ee_collection = ee_collection.filter(ee_region_filter).filter(ee_date_filter)
     ee_collection = ee_collection.filter(ee.Filter.lt(cloud_string, cloud_cover_max))
     ee_collection = ee_collection.filter(ee.Filter.gte(cloud_string, cloud_cover_min))
     ee_collection = ee_collection.select(ee_bands)
@@ -110,7 +110,7 @@ def get_collection(sensor, ee_region_filter, ee_date_filter, ee_bands = None, cl
 def get_points_in_region(ee_region, num_points, pts_scale, pts_seed):
     """
     Selects random points within a specified region, focusing on land areas. Uses MODIS land/water data to filter out water bodies.
-
+    
     Parameters:
     ee_region (ee.Geometry): The region within which to select points.
     num_points (int): The number of random points to select.
@@ -155,7 +155,7 @@ def make_rectangle(ee_point, h_pt_buffer, v_pt_buffer = None):
     pt_tl_y = transformed_pt[1] + v_pt_buffer
     pt_br_x = transformed_pt[0] + h_pt_buffer
     pt_br_y = transformed_pt[1] - v_pt_buffer
-    pt_rect = ee.Geometry.Rectangle([pt_tl_x, pt_br_y, pt_br_x, pt_tl_y], proj, True, False).bounds("EPSG:4326")
+    pt_rect = ee.Geometry.Rectangle([pt_tl_x, pt_br_y, pt_br_x, pt_tl_y], proj, True, False).bounds()
     return pt_rect
 
 def get_url(index):
@@ -180,7 +180,7 @@ def get_url(index):
             else:
                 crs = "EPSG:326" + args.grid_key[:-1]
     if args.sensor in ('l8','l9'):
-        image = image.multiply(650).toByte()
+        image = image.multiply(255/0.3).toByte()
         image = image.clip(image.geometry())
     url = image.getDownloadURL({
         'scale':scale,
@@ -288,6 +288,7 @@ collection = get_collection(args.sensor, region_filter, date_filter,
 if not args.custom_mosaics:
     # Process landsat sensor.
     if args.sensor in ('l8', 'l9'):
+        collection = collection.filterBounds(region_rect)
         collection_size = collection.size().getInfo()
         if collection_size < max_ims:
             max_ims = collection_size
@@ -336,10 +337,10 @@ else:
         collection_with_random_column = collection_with_random_column.randomColumn('random',np.random.randint(100000))
         collection_with_random_column = collection_with_random_column.sort('random')
         collection_with_random_column = ee.ImageCollection(collection_with_random_column)
-        multiplier = 255/0.3
+        MULTIPLIER = 255/0.3
         if args.sensor == 's2':
-            multiplier = multiplier*0.0001    
-        im = collection_with_random_column.mosaic().multiply(multiplier).toByte()
+            MULTIPLIER = MULTIPLIER*0.0001    
+        im = collection_with_random_column.mosaic().multiply(MULTIPLIER).toByte()
         rect_im = im.clip(clip_rect)
         out_name = args.sensor + '_' + region_name + '_' + str(i).zfill(5)
         task_config = {
@@ -357,17 +358,14 @@ if __name__ == '__main__':
     if not args.custom_mosaics:
         indexes = range(max_ims)
         print('Downloading images.')
-        process_map(get_and_download_url, indexes, max_workers=cpu_count())
+        process_map(get_and_download_url, indexes, max_workers=cpu_count(), chunksize=1)
     else:
         print('Downloading images.')
+        print('View status of tasks at: https://code.earthengine.google.com/tasks')
         for task in task_list:
             task.start()
             print('Task',task.id,'started')
-        while(1):
-            if all([task.status().get('state') == 'COMPLETED' for task in task_list]):
-                break
+        while(not all([(task.status().get('state') != 'READY' or task.status().get('state') != 'RUNNING') for task in task_list])):
             print('Tasks still running')
-            for task in task_list:
-                print('Task',task.id,'status:',task.status().get('state'))
             time.sleep(60)
         print('All tasks completed')
