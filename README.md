@@ -7,7 +7,7 @@ General options:
   * Download random Landsat mosaics with designated size to Google Drive
   * Download random Sentinel mosaics with designated size to Google Drive
 
-A more detailed explanation of options is available in [Usage](https://github.com/CMUAbstract/eedl/main/README.md#usage).
+A more detailed explanation of options is available in [Usage](https://github.com/CMUAbstract/eedl/blob/main/README.md#usage).
 
 ## Set-up
 First you need to register with Google Earth Engine. (https://code.earthengine.google.com/)
