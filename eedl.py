@@ -99,7 +99,9 @@ def get_collection(sensor, ee_region_filter, ee_date_filter, ee_bands = None, cl
 
     ee_collection = ee.ImageCollection(collection_string)
     ee_collection = ee_collection.filter(ee_date_filter)
-    ee_collection = ee_collection.filter(ee_region_filter).filter(ee_date_filter)
+    if not args.custom_mosaics:
+        ee_collection = ee_collection.filter(ee_region_filter)
+    ee_collection = ee_collection.filter(ee_date_filter)
     ee_collection = ee_collection.filter(ee.Filter.lt(cloud_string, cloud_cover_max))
     ee_collection = ee_collection.filter(ee.Filter.gte(cloud_string, cloud_cover_min))
     ee_collection = ee_collection.select(ee_bands)
@@ -232,9 +234,9 @@ def argument_parser():
     parser.add_argument('-s', '--scale', type = float, default = 328.0)
     parser.add_argument('-m', '--maxims', type = int, default = 10)
     parser.add_argument('-se', '--sensor', choices=['l8', 'l9', 's2'], type=str, default = 'l8')
-    parser.add_argument('-o', '--outpath', type=str, default = 'landsat_images')
+    parser.add_argument('-o', '--outpath', type=str, default = 'images')
     parser.add_argument('-r', '--region', type=str, default=None)
-    parser.add_argument('-e', '--format', type=str,default = 'GEOTiff')
+    parser.add_argument('-e', '--format', type=str,default = 'GEOTiff', choices=['GEOTiff'])
     parser.add_argument('-sd', '--seed', type=int,default = None)
     parser.add_argument('-c', '--crs', type=str, default = None)
     parser.add_argument('-cc', '--cloud_cover_max',type=float, default = 30.0)
@@ -365,7 +367,9 @@ if __name__ == '__main__':
         for task in task_list:
             task.start()
             print('Task',task.id,'started')
-        while(not all([(task.status().get('state') != 'READY' or task.status().get('state') != 'RUNNING') for task in task_list])):
+        while(1):
+            if all([(task.status().get('state') != 'READY' and task.status().get('state') != 'RUNNING') for task in task_list]):
+                break
             print('Tasks still running')
             time.sleep(60)
         print('All tasks completed')
