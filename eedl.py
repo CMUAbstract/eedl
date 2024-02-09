@@ -246,9 +246,12 @@ def argument_parser():
     parser.add_argument('-vb', '--vertical_buffer', type=float, default = 318816)
     parser.add_argument('-hb', '--horizontal_buffer', type=float, default = 425088)
     parser.add_argument('-gd', '--gdrive', type=bool, default = False)
+    parser.add_argument('-np', '--nprocs', type=int, default = None)
     parsed_args = parser.parse_args()
     if parsed_args.region is None:
         parsed_args.region = parsed_args.grid_key
+    if parsed_args.nprocs is None:
+        parsed_args.nprocs = cpu_count()
     return parsed_args
 
 
@@ -429,7 +432,7 @@ if __name__ == '__main__':
         else:
             indexes = range(max_ims)
             print('Downloading images.')
-            process_map(get_and_download_url, indexes, max_workers=cpu_count(), chunksize=1)
+            process_map(get_and_download_url, indexes, max_workers=args.nprocs, chunksize=1)
     else:
         print('Downloading images.')
         print('View status of tasks at: https://code.earthengine.google.com/tasks')
