@@ -231,7 +231,7 @@ def argument_parser():
     parser.add_argument('-g', '--grid_key', type=str)
     parser.add_argument('-i', '--idate',type=str, default='2022')
     parser.add_argument('-f', '--fdate',type=str, default='2023')
-    parser.add_argument('-s', '--scale', type = float, default = 328.0)
+    parser.add_argument('-s', '--scale', type = float, default = 150.0)
     parser.add_argument('-m', '--maxims', type = int, default = 10)
     parser.add_argument('-se', '--sensor', choices=['l8', 'l9', 's2'], type=str, default = 'l8')
     parser.add_argument('-o', '--outpath', type=str, default = 'images')
@@ -239,13 +239,13 @@ def argument_parser():
     parser.add_argument('-e', '--format', type=str,default = 'GEOTiff', choices=['GEOTiff'])
     parser.add_argument('-sd', '--seed', type=int,default = None)
     parser.add_argument('-c', '--crs', type=str, default = None)
-    parser.add_argument('-cc', '--cloud_cover_max',type=float, default = 30.0)
+    parser.add_argument('-cc', '--cloud_cover_max',type=float, default = 40.0)
     parser.add_argument('-ccgt', '--cloud_cover_min', type=float, default = 0.0)
     parser.add_argument('-ba','--bands',type=str,nargs='+',default =['B4','B3','B2'])
     parser.add_argument('-cm', '--custom_mosaics', type=bool, default = False)
     parser.add_argument('-vb', '--vertical_buffer', type=float, default = 318816)
     parser.add_argument('-hb', '--horizontal_buffer', type=float, default = 425088)
-    parser.add_argument('-gdrive', '--gdrive', type=bool, default = False)
+    parser.add_argument('-gd', '--gdrive', type=bool, default = False)
     parsed_args = parser.parse_args()
     if parsed_args.region is None:
         parsed_args.region = parsed_args.grid_key
@@ -402,11 +402,11 @@ else:
         rect_im = im.clip(clip_rect)
         out_name = args.sensor + '_' + region_name + '_' + str(i).zfill(5)
         task_config = {
-        'scale': scale,
-        'fileFormat': out_format,
-        'region': clip_rect,
-        'driveFolder': out_path,
-        'crs': proj
+            'scale': scale,
+            'fileFormat': out_format,
+            'region': clip_rect,
+            'driveFolder': out_path,
+            'crs': proj
          }
         task = ee.batch.Export.image(rect_im, out_name, task_config)
         task_list.append(task)
@@ -419,7 +419,7 @@ if __name__ == '__main__':
             print('View status of tasks at: https://code.earthengine.google.com/tasks')
             for task in task_list:
                 task.start()
-                print('Task',task.id,'started')
+                # print('Task',task.id,'started')
             while(1):
                 if all([(task.status().get('state') != 'READY' and task.status().get('state') != 'RUNNING') for task in task_list]):
                     break
