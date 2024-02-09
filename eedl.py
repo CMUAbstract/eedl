@@ -147,17 +147,17 @@ def make_rectangle(ee_point, h_pt_buffer, v_pt_buffer = None):
     coords = ee_point['coordinates']
 
     if args.grid_key[-1] <= 'M':
-        proj = "EPSG:327" + args.grid_key[:-1]
+        projection = "EPSG:327" + args.grid_key[:-1]
     else:
-        proj = "EPSG:326" + args.grid_key[:-1]
+        projection = "EPSG:326" + args.grid_key[:-1]
 
-    transformer = pyproj.Transformer.from_crs("EPSG:4326", proj, always_xy=True)
+    transformer = pyproj.Transformer.from_crs("EPSG:4326", projection, always_xy=True)
     transformed_pt = tuple(transformer.transform(coords[0], coords[1]))
     pt_tl_x = transformed_pt[0] - h_pt_buffer
     pt_tl_y = transformed_pt[1] + v_pt_buffer
     pt_br_x = transformed_pt[0] + h_pt_buffer
     pt_br_y = transformed_pt[1] - v_pt_buffer
-    pt_rect = ee.Geometry.Rectangle([pt_tl_x, pt_br_y, pt_br_x, pt_tl_y], proj, True, False).bounds()
+    pt_rect = ee.Geometry.Rectangle([pt_tl_x, pt_br_y, pt_br_x, pt_tl_y], projection, True, False).bounds()
     return pt_rect
 
 def get_url(index):
@@ -245,6 +245,7 @@ def argument_parser():
     parser.add_argument('-cm', '--custom_mosaics', type=bool, default = False)
     parser.add_argument('-vb', '--vertical_buffer', type=float, default = 318816)
     parser.add_argument('-hb', '--horizontal_buffer', type=float, default = 425088)
+    parser.add_argument('-gdrive', '--gdrive', type=bool, default = False)
     parsed_args = parser.parse_args()
     if parsed_args.region is None:
         parsed_args.region = parsed_args.grid_key
@@ -295,33 +296,88 @@ if not args.custom_mosaics:
         if collection_size < max_ims:
             max_ims = collection_size
         im_list = collection.toList(max_ims)
+        if args.gdrive:
+            task_list = []
+            for i in range(max_ims):
+                im = ee.Image(im_list.get(i))
+                if args.crs:
+                    crs = args.crs
+                else:
+                    crs = im.select(0).projection()
+                im = im.multiply(255/0.3).toByte()
+                im = im.clip(im.geometry())
+                out_name = args.sensor + '_' + region_name + '_' + str(i).zfill(5)
+                task_config = {
+                    'scale': scale,
+                    'fileFormat': out_format,
+                    'crs': crs,
+                    'driveFolder': out_path
+                }
+                task = ee.batch.Export.image.toDrive(im, out_name, task_config)
+                task_list.append(task)
+
 
     # Process sentinel sensor.
     elif args.sensor == 's2':
-        im_list = []
-        if args.seed:
-            seed = args.seed
-            np.random.seed = seed
+        if args.gdrive:
+            task_list = []
+            if args.seed:
+                seed = args.seed
+                np.random.seed = seed
+            else:
+                seed = np.random.randint(100000)
+            points = get_points_in_region(region_rect, max_ims, scale, np.random.randint(100000))
+            if args.grid_key[-1] <= 'M':
+                proj = "EPSG:327" + args.grid_key[:-1]
+            else:
+                proj = "EPSG:326" + args.grid_key[:-1]
+            for i,point in enumerate(points):
+                # Create custom rectangle around point and filter collection
+                clip_rect = make_rectangle(point, 185000/2)
+                collection_with_random_column = collection.filterBounds(clip_rect)
+                collection_with_random_column = collection_with_random_column.randomColumn('random',np.random.randint(100000))
+                collection_with_random_column = collection_with_random_column.sort('random')
+                collection_with_random_column = ee.ImageCollection(collection_with_random_column)
+                MULTIPLIER = 255/0.3
+                if args.sensor == 's2':
+                    MULTIPLIER = MULTIPLIER*0.0001    
+                im = collection_with_random_column.mosaic().multiply(MULTIPLIER).toByte()
+                rect_im = im.clip(clip_rect)
+                out_name = args.sensor + '_' + region_name + '_' + str(i).zfill(5)
+                task_config = {
+                    'scale': scale,
+                    'fileFormat': out_format,
+                    'region': clip_rect,
+                    'driveFolder': out_path,
+                    'crs': proj
+                }
+                task = ee.batch.Export.image(rect_im, out_name, task_config)
+                task_list.append(task)
         else:
-            seed = np.random.randint(100000)
-        # Select random points in region.
-        points = get_points_in_region(region_rect, max_ims, scale, np.random.randint(100000))
-        for point in points:
-            # Create landsat sized rectangle around point and filter collection
-            clip_rect = make_rectangle(point, 185000/2)
-            collection_with_random_column = collection.filterBounds(clip_rect)
-            # Add random value to each image in collection.
-            collection_with_random_column = collection_with_random_column.randomColumn('random',np.random.randint(100000))
-            # Sort by random value to change mosaic.
-            collection_with_random_column = collection_with_random_column.sort('random')
-            # Convert feature collection back to image collection.
-            collection_with_random_column = ee.ImageCollection(collection_with_random_column)
-            # Create mosaic and scale to vis spectrum and byte.
-            im = collection_with_random_column.mosaic().multiply(0.0001).divide(0.3).multiply(255).toByte()
-            # Clip image to landsat-like rectangle.
-            rect_im = im.clip(clip_rect)
-            im_list.append(rect_im)
-        im_list = ee.List(im_list)
+            im_list = []
+            if args.seed:
+                seed = args.seed
+                np.random.seed = seed
+            else:
+                seed = np.random.randint(100000)
+            # Select random points in region.
+            points = get_points_in_region(region_rect, max_ims, scale, np.random.randint(100000))
+            for point in points:
+                # Create landsat sized rectangle around point and filter collection
+                clip_rect = make_rectangle(point, 185000/2)
+                collection_with_random_column = collection.filterBounds(clip_rect)
+                # Add random value to each image in collection.
+                collection_with_random_column = collection_with_random_column.randomColumn('random',np.random.randint(100000))
+                # Sort by random value to change mosaic.
+                collection_with_random_column = collection_with_random_column.sort('random')
+                # Convert feature collection back to image collection.
+                collection_with_random_column = ee.ImageCollection(collection_with_random_column)
+                # Create mosaic and scale to vis spectrum and byte.
+                im = collection_with_random_column.mosaic().multiply(0.0001).divide(0.3).multiply(255).toByte()
+                # Clip image to landsat-like rectangle.
+                rect_im = im.clip(clip_rect)
+                im_list.append(rect_im)
+            im_list = ee.List(im_list)
 else:
     # Create custom width and height mosaics
     im_list = []
@@ -358,9 +414,22 @@ else:
 
 if __name__ == '__main__':
     if not args.custom_mosaics:
-        indexes = range(max_ims)
-        print('Downloading images.')
-        process_map(get_and_download_url, indexes, max_workers=cpu_count(), chunksize=1)
+        if args.gdrive:
+            print('Downloading images to Google Drive.')
+            print('View status of tasks at: https://code.earthengine.google.com/tasks')
+            for task in task_list:
+                task.start()
+                print('Task',task.id,'started')
+            while(1):
+                if all([(task.status().get('state') != 'READY' and task.status().get('state') != 'RUNNING') for task in task_list]):
+                    break
+                print('Tasks still running')
+                time.sleep(60)
+            print('All tasks completed')
+        else:
+            indexes = range(max_ims)
+            print('Downloading images.')
+            process_map(get_and_download_url, indexes, max_workers=cpu_count(), chunksize=1)
     else:
         print('Downloading images.')
         print('View status of tasks at: https://code.earthengine.google.com/tasks')
