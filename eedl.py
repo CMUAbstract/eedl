@@ -422,13 +422,7 @@ if __name__ == '__main__':
             print('View status of tasks at: https://code.earthengine.google.com/tasks')
             for task in task_list:
                 task.start()
-                # print('Task',task.id,'started')
-            while(1):
-                if all([(task.status().get('state') != 'READY' and task.status().get('state') != 'RUNNING') for task in task_list]):
-                    break
-                print('Tasks still running')
-                time.sleep(60)
-            print('All tasks completed')
+            print(len(task_list), 'tasks started')
         else:
             indexes = range(max_ims)
             print('Downloading images.')
@@ -438,10 +432,4 @@ if __name__ == '__main__':
         print('View status of tasks at: https://code.earthengine.google.com/tasks')
         for task in task_list:
             task.start()
-            print('Task',task.id,'started')
-        while(1):
-            if all([(task.status().get('state') != 'READY' and task.status().get('state') != 'RUNNING') for task in task_list]):
-                break
-            print('Tasks still running')
-            time.sleep(60)
-        print('All tasks completed')
+        print(len(task_list), 'tasks started')
