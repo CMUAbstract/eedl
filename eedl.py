@@ -16,7 +16,6 @@ import argparse
 import os
 import shutil
 from multiprocessing import cpu_count
-import time
 import ee
 import requests
 from retry import retry
