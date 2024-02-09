@@ -28,19 +28,20 @@ Available commands:
 * ```-g, --grid_key```: Military Grid Reference System (MGRS) designated region describing a section of the Earth. Examples: 17R, 32S. Overrides ```--bounds``` argument.
 * ```-i, --idate```: Initial date for the time range of imagery to download. Format: YYYY-MM-DD, YYYY-MM, or YYYY
 * ```-f, --fdate```: Final date for the time range of imagery to download. Format: YYYY-MM-DD, YYYY-MM, or YYYY
-* ```-s, --scale```: Spatial resolution of imagery. Default = 164.0 meters.
+* ```-s, --scale```: Spatial resolution of imagery. Default = 150.0 meters.
 * ```-m, --maxims```: Maximum number of images to download. Default = 10.
 * ```-se, --sensor```: Specify the satellite sensor to download imagery from. Options: 'l8' for Landsat 8, 'l9' for Landsat 9, 's2' for Sentinel 2. Defaults to 's2'.
 * ```-o, --outpath```: Specify the directory to put imagery in. Default is 'images'.
 * ```-r, --region```: Custom region name for naming files. Required if using custom bounds. Defaults to ```--grid_key``` argument if not specified.
 * ```-sd, --seed```: Seed for replicating downloads and random mosaics. 
 * ```-c, --crs```: Specifies coordinate reference system if specific CRS desired. 
-* ```-cc, --cloud_cover_max```: Float that specifies maximum percentage of cloud cover in each image. Defaults to 30.0.
+* ```-cc, --cloud_cover_max```: Float that specifies maximum percentage of cloud cover in each image. Defaults to 40.0.
 * ```-ccgt, --cloud_cover_min```: Float that specifices minimum percentage of cloud cover in each image. Defaults to 0.0.
 * ```-ba, --bands```: Specifies bands to include in image download. Defaults to RGB which is B4 B3 B2.
 * ```-cm, --custom_mosaics```: Flag to enable custom mosaics. Switches download method from direct to Google Drive. Defaults to False.
 * ```-vb, --vertical_buffer```: Vertical buffer around center point of created custom mosaic in meters. Defaults to 318816.
 * ```-hb, --horizontal_buffer```: Horizontal buffer around center point of created custom mosaic in meters. Defaults to 425088.
+* ```-gd, --gdrive```: Download flag to set all images to download directly to Google Drive. Defaults to False.
 * ```-h, --help```: Show the help message and exit.
 
 Below are some examples of use cases:
