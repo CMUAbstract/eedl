@@ -248,6 +248,7 @@ def argument_parser():
     parser.add_argument('-hb', '--horizontal_buffer', type=float, default = 425088)
     parser.add_argument('-gd', '--gdrive', type=bool, default = False)
     parser.add_argument('-np', '--nprocs', type=int, default = None)
+    parser.add_argument('-rm', '--region_mosaic', type=bool, default = False)
     parsed_args = parser.parse_args()
     if parsed_args.region is None:
         parsed_args.region = parsed_args.grid_key
@@ -293,8 +294,35 @@ collection = get_collection(args.sensor, region_filter, date_filter,
                             cloud_cover_max=args.cloud_cover_max, date_sort=True)
 
 if not args.custom_mosaics:
+    # Make region mosaic of specified region
+    if args.region_mosaic:
+        task_list = []
+        if args.seed:
+            seed = args.seed
+            np.random.seed = seed
+        else:
+            seed = np.random.randint(100000)
+        for i in range(max_ims):          
+            collection_with_random_column = collection.randomColumn('random',np.random.randint(100000))
+            collection_with_random_column = collection_with_random_column.sort('random')
+            collection_with_random_column = ee.ImageCollection(collection_with_random_column)
+            MULTIPLIER = 255/0.3
+            if args.sensor == 's2':
+                MULTIPLIER = MULTIPLIER*0.0001    
+            im = collection_with_random_column.mosaic().multiply(MULTIPLIER).toByte()
+            out_name = args.sensor + '_' + region_name + '_' + str(i).zfill(5)
+            task_config = {
+                'scale': scale,
+                'fileFormat': out_format,
+                'region': region_rect,
+                'driveFolder': out_path,
+                'crs': 'EPSG:4326'
+            }
+            task = ee.batch.Export.image(im, out_name, task_config)
+            task_list.append(task)
+
     # Process landsat sensor.
-    if args.sensor in ('l8', 'l9'):
+    elif args.sensor in ('l8', 'l9'):
         collection = collection.filterBounds(region_rect)
         collection_size = collection.size().getInfo()
         if collection_size < max_ims:
@@ -422,7 +450,7 @@ else:
 
 if __name__ == '__main__':
     if not args.custom_mosaics:
-        if args.gdrive:
+        if args.gdrive or args.region_mosaic:
             print('Downloading images to Google Drive.')
             print('View status of tasks at: https://code.earthengine.google.com/tasks')
             for task in task_list:
