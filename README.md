@@ -42,6 +42,8 @@ Available commands:
 * ```-vb, --vertical_buffer```: Vertical buffer around center point of created custom mosaic in meters. Defaults to 318816.
 * ```-hb, --horizontal_buffer```: Horizontal buffer around center point of created custom mosaic in meters. Defaults to 425088.
 * ```-gd, --gdrive```: Download flag to set all images to download directly to Google Drive. Defaults to False.
+* ```-np, --nprocs```: Integer override for multiprocess to control number of simultaneous image requests to send to Earth Engine. If None defaults to output of cpu_count.
+* ```-rm`, ``region_mosaic```: Flag to generate random mosaics of the entire region as opposed to sample images from within a region. Defaults to False.
 * ```-h, --help```: Show the help message and exit.
 
 Below are some examples of use cases:
