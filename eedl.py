@@ -145,7 +145,9 @@ def make_rectangle(ee_point, h_pt_buffer, v_pt_buffer = None):
         v_pt_buffer = h_pt_buffer
     coords = ee_point['coordinates']
 
-    if args.grid_key[-1] <= 'M':
+    if args.grid_key is None:
+        projection = "EPSG:4326"
+    elif args.grid_key[-1] <= 'M':
         projection = "EPSG:327" + args.grid_key[:-1]
     else:
         projection = "EPSG:326" + args.grid_key[:-1]
@@ -329,7 +331,9 @@ if not args.custom_mosaics:
             else:
                 seed = np.random.randint(100000)
             points = get_points_in_region(region_rect, max_ims, scale, np.random.randint(100000))
-            if args.grid_key[-1] <= 'M':
+            if args.grid_key is None:
+                proj = "EPSG:4326"
+            elif args.grid_key[-1] <= 'M':
                 proj = "EPSG:327" + args.grid_key[:-1]
             else:
                 proj = "EPSG:326" + args.grid_key[:-1]
@@ -386,7 +390,9 @@ else:
     task_list = []
     # Get random points in region
     points = get_points_in_region(region_rect, max_ims, scale, np.random.randint(100000))
-    if args.grid_key[-1] <= 'M':
+    if args.grid_key is None:
+        proj = "EPSG:4326"
+    elif args.grid_key[-1] <= 'M':
         proj = "EPSG:327" + args.grid_key[:-1]
     else:
         proj = "EPSG:326" + args.grid_key[:-1]
