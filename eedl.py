@@ -450,7 +450,7 @@ else:
 
 if __name__ == '__main__':
     if not args.custom_mosaics:
-        if args.gdrive or args.region_mosaic:
+        if args.gdrive:
             print('Downloading images to Google Drive.')
             print('View status of tasks at: https://code.earthengine.google.com/tasks')
             for task in task_list:
