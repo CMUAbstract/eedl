@@ -296,6 +296,7 @@ collection = get_collection(args.sensor, region_filter, date_filter,
 if not args.custom_mosaics:
     # Make region mosaic of specified region
     if args.region_mosaic:
+        im_list = []
         task_list = []
         if args.seed:
             seed = args.seed
@@ -320,6 +321,8 @@ if not args.custom_mosaics:
             }
             task = ee.batch.Export.image(im, out_name, task_config)
             task_list.append(task)
+            im_list.append(im)
+        im_list = ee.List(im_list)
 
     # Process landsat sensor.
     elif args.sensor in ('l8', 'l9'):
