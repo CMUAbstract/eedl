@@ -16,7 +16,7 @@ After registering you can set up EEDL in your local environment.
 
 In a conda environment perform the following commands:
 ```
-conda create -n eedl --file requirements.txt
+conda create -n eedl --file requirements.txt -c conda-forge
 conda activate eedl
 earthengine authenticate
 ```
