@@ -38,7 +38,7 @@ def get_region_filter_from_bounds(bounds, get_rect=True):
     ee.Filter: A filter that selects images intersecting with the defined rectangle.
     ee.Geometry.Rectangle (optional): The rectangle geometry, returned if getRect is True.
     """
-    region_left, region_top, region_right, region_bottom = bounds
+    region_left, region_bottom, region_right, region_top = bounds
     rect_from_bounds = ee.Geometry.Rectangle([region_left, region_top, region_right, region_bottom])
     
     # If sensor is Sentinel 2, add 500 km buffer to bounds of grid region to avoid black sections of images.
@@ -249,6 +249,7 @@ def argument_parser():
     parser.add_argument('-gd', '--gdrive', type=bool, default = False)
     parser.add_argument('-np', '--nprocs', type=int, default = None)
     parser.add_argument('-rm', '--region_mosaic', type=bool, default = False)
+    parser.add_argument('-rc', '--region_composite', type=bool, default = False)
     parsed_args = parser.parse_args()
     if parsed_args.region is None:
         parsed_args.region = parsed_args.grid_key
@@ -294,8 +295,26 @@ collection = get_collection(args.sensor, region_filter, date_filter,
                             cloud_cover_max=args.cloud_cover_max, date_sort=True)
 
 if not args.custom_mosaics:
+    # Process region composite of specified region
+    if args.region_composite:
+        task_list = []
+        collection = ee.ImageCollection('LANDSAT/LC08/C02/T1').filterDate('2015','2022').filterBounds(region_rect).filter(ee.Filter.lt('CLOUD_COVER', 15))
+        composite = ee.Algorithms.Landsat.simpleComposite(collection).select('B4','B3','B2')
+        composite = composite.divide(0.3).toByte()
+        out_name = args.sensor + '_' + region_name + '_composite'
+        if not args.crs:
+            crs = 'EPSG:4326'
+        task_config = {
+            'scale': scale,
+            'fileFormat': out_format,
+            'region': region_rect,
+            'driveFolder': out_path,
+            'crs': crs
+        }
+        task = ee.batch.Export.image(composite, out_name, task_config)
+        task_list.append(task)
     # Make region mosaic of specified region
-    if args.region_mosaic:
+    elif args.region_mosaic:
         im_list = []
         task_list = []
         if args.seed:
@@ -464,8 +483,8 @@ if __name__ == '__main__':
             print('Downloading images.')
             process_map(get_and_download_url, indexes, max_workers=args.nprocs, chunksize=1)
     else:
-        print('Downloading images.')
-        print('View status of tasks at: https://code.earthengine.google.com/tasks')
+        print('Downloading image(s).')      
         for task in task_list:
             task.start()
-        print(len(task_list), 'tasks started')
+        print(len(task_list), 'task(s) started')
+        print('View status of tasks at: https://code.earthengine.google.com/tasks')
