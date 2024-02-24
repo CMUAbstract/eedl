@@ -357,7 +357,7 @@ if not args.custom_mosaics:
                 if args.crs:
                     crs = args.crs
                 else:
-                    crs = im.select(0).projection()
+                    crs = im.select(0).projection().crs().getInfo()
                 im = im.multiply(255/0.3).toByte()
                 im = im.clip(im.geometry())
                 out_name = args.sensor + '_' + region_name + '_' + str(i).zfill(5)
@@ -367,7 +367,7 @@ if not args.custom_mosaics:
                     'crs': crs,
                     'driveFolder': out_path
                 }
-                task = ee.batch.Export.image.toDrive(im, out_name, task_config)
+                task = ee.batch.Export.image.toDrive(im, out_name, **task_config)
                 task_list.append(task)
 
 
