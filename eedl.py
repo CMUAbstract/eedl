@@ -298,7 +298,8 @@ if not args.custom_mosaics:
     # Process region composite of specified region
     if args.region_composite:
         task_list = []
-        collection = ee.ImageCollection('LANDSAT/LC08/C02/T1').filterDate('2015','2022').filterBounds(region_rect).filter(ee.Filter.lt('CLOUD_COVER', 15))
+        region_rect = region_rect.buffer(10000).bounds()
+        collection = ee.ImageCollection('LANDSAT/LC08/C02/T1').filterDate('2020','2022').filterBounds(region_rect).filter(ee.Filter.lt('CLOUD_COVER', 5))
         composite = ee.Algorithms.Landsat.simpleComposite(collection).select('B4','B3','B2')
         composite = composite.divide(0.3).toByte()
         out_name = args.sensor + '_' + region_name + '_composite'
