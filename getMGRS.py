@@ -5,6 +5,7 @@ May return specific longitude and latitude ranges for a given MGRS coordinate if
 Author: Kyle McCleary
 """
 import argparse
+
 import numpy as np
 
 LONSTEP = 6
@@ -45,6 +46,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-k','--key',default=None,type=str)
     args = parser.parse_args()
+    grid = getMGRS()
     if args.key:
-        grid = getMGRS()
         print(grid[args.key])
+    else:
+        print(grid)
+
+
+
+
+
