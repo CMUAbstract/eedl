@@ -2,7 +2,7 @@
 
 Python script for downloading Landsat 8, Landsat 9, and Sentinel 2 imagery from Google Earth Engine.
 General options:
-  * Directly download raw Landsat imagery directly
+  * Directly download raw Landsat imagery
   * Directly download random Sentinel 2 mosaics in the shape of raw Landsat imagery
   * Download random Landsat mosaics with designated size to Google Drive
   * Download random Sentinel mosaics with designated size to Google Drive
