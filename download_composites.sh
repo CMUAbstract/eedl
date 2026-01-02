@@ -3,25 +3,15 @@
 # Script to download 10 composite images with exact pixel dimensions
 
 # Configuration
-MGRS_REGION="15V"              # MGRS grid region
-START_DATE="2023-01-01"        # Start date for imagery
-END_DATE="2023-12-31"          # End date for imagery
+MGRS_REGION="09V"              # MGRS grid region
+START_DATE="2017"        # Start date for imagery
+END_DATE="2024"          # End date for imagery
 NUM_IMAGES=10                   # Number of composite images to generate
 SENSOR="l8"                     # Sensor: l8 (Landsat 8) or l9 (Landsat 9)
-GSD=135.0                       # Ground Sample Distance in meters
+GSD=175.0                       # Ground Sample Distance in meters
 WIDTH_PIXELS=4608               # Image width in pixels
 HEIGHT_PIXELS=2592              # Image height in pixels
-OUTPUT_DIR="composite_images"   # Output directory on Google Drive
-
-# Calculate coverage area
-WIDTH_KM=$(echo "scale=2; $WIDTH_PIXELS * $GSD / 1000" | bc)
-HEIGHT_KM=$(echo "scale=2; $HEIGHT_PIXELS * $GSD / 1000" | bc)
-
-echo "Image Configuration:"
-echo "  Dimensions: ${WIDTH_PIXELS} × ${HEIGHT_PIXELS} pixels"
-echo "  GSD: ${GSD}m"
-echo "  Coverage: ${WIDTH_KM}km × ${HEIGHT_KM}km"
-echo ""
+OUTPUT_DIR="09V_composite_images"   # Output directory on Google Drive
 
 # Run the composite downloader
 python composite-eedl-mgrs.py \
